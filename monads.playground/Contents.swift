@@ -149,29 +149,38 @@ case .failure:
 }
 
 // Another option is to make multiple versions of apply, which looks gross but usage is nice
-func apply<A, B, C>(transform: Result<(A, B) -> C>, _ lhs: Result<A>, _ rhs: Result<B>) -> Result<C> {
+func apply2<A, B, C>(transform: Result<(A, B) -> C>, _ lhs: Result<A>, _ rhs: Result<B>) -> Result<C> {
     switch transform {
     case .success(let function):
-        switch lhs {
-        case .success(let lhsValue):
-            switch rhs {
-            case .success(let rhsValue):
-                return .success(function(lhsValue, rhsValue))
-                
-            case .failure(let error):
-                return .failure(error)
-            }
-            
-        case .failure(let error):
-            return .failure(error)
-        }
+        return pure(curry(function)) <*> lhs <*> rhs
         
     case .failure(let error):
         return .failure(error)
     }
+    
+// Without using <*> operator:
+//    switch transform {
+//    case .success(let function):
+//        switch lhs {
+//        case .success(let lhsValue):
+//            switch rhs {
+//            case .success(let rhsValue):
+//                return .success(function(lhsValue, rhsValue))
+//                
+//            case .failure(let error):
+//                return .failure(error)
+//            }
+//            
+//        case .failure(let error):
+//            return .failure(error)
+//        }
+//        
+//    case .failure(let error):
+//        return .failure(error)
+//    }
 }
 
-let addResult3 = apply(transform: pure(add), numberOne, numberTwo)
+let addResult3 = apply2(transform: pure(add), numberOne, numberTwo)
 
 switch addResult3 {
 case .success(let value):
